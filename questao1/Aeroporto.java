@@ -9,6 +9,7 @@ public class Aeroporto {
 
     public static int totalPistas;
     public static long horarioRealStart;
+    public static int pistaLivreId;
 
     private static Scanner inputs = new Scanner(System.in);
     
@@ -35,10 +36,10 @@ public class Aeroporto {
 
         avioes = sortAviaoArr(avioes);
 
-        for (int i = 0; i < totalPistas; i++) {
-            pistas.add(new Pista());
+        for (int i = 1; i < totalPistas; i++) {
+            pistas.add(new Pista(i));
         }
-
+        
         horarioRealStart = System.currentTimeMillis();
 
         Controlador.Operador();

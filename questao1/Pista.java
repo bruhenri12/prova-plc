@@ -2,10 +2,19 @@ package questao1;
 
 public class Pista implements Runnable {
 
+    private int pistaId;
     private Aviao aviao;
+
+    public Pista(int id) {
+        this.pistaId = id;
+    }
 
     public void setAviao(Aviao a) {
         this.aviao = a;
+    }
+
+    public int getId() {
+        return this.pistaId;
     }
 
     @Override
@@ -19,10 +28,10 @@ public class Pista implements Runnable {
         while (hrAtual < hrDesejado + 500) {
             hrAtual = System.currentTimeMillis() - Aeroporto.horarioRealStart;
         }
-        
+
         long atraso = hrAtual - (hrDesejado + 500);
 
-        System.out.print("Pista " + Thread.currentThread().getName());
+        System.out.print("Pista " + this.pistaId);
         System.out.print(": Aviao para ");
         System.out.print(hrDesejado);
         System.out.print(" " + status + " ");

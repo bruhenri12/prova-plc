@@ -1,5 +1,6 @@
 package questao1;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -27,7 +28,7 @@ public class Controlador{
                     ocupou.await();
                 }
 
-                Aeroporto.pistas.add(new Pista());
+                Aeroporto.pistas.add(new Pista(Aeroporto.pistaLivreId));
                 liberou.signal();
 
             } finally {
@@ -56,14 +57,15 @@ public class Controlador{
                 while (Aeroporto.pistas.isEmpty()) {
                     liberou.await();
                 }
-
+                
                 Pista pistaAtual = Aeroporto.pistas.get(0);
                 pistaAtual.setAviao(Aeroporto.avioes.get(0));
                 
+                Aeroporto.pistaLivreId = pistaAtual.getId();
                 (new Thread(pistaAtual)).start();
-
-                Aeroporto.pistas.remove(0);
+                
                 Aeroporto.avioes.remove(0);
+                Aeroporto.pistas.remove(0);
 
                 ocupou.signal();
             } finally {
