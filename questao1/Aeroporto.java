@@ -7,9 +7,10 @@ import java.util.Scanner;
 
 public class Aeroporto {
 
+    public static int totalPistas;
+    public static long horarioRealStart;
+
     private static Scanner inputs = new Scanner(System.in);
-    
-    private static int totalPistas;
     
     public static List<Aviao> avioes = new ArrayList<Aviao>();
     public static List<Pista> pistas = new ArrayList<Pista>();
@@ -17,17 +18,17 @@ public class Aeroporto {
     public static void main(String[] args) {
 
 
-        System.out.println("Quantidade de avioes saindo: ");
+        System.out.print("Quantidade de avioes saindo: ");
         int paraDecolar = inputs.nextInt();
         
         avioes = appendAvioes(avioes,paraDecolar,"saindo");
 
-        System.out.println("Quantidade de avioes chegando: ");
+        System.out.print("Quantidade de avioes chegando: ");
         int paraChegar = inputs.nextInt();
         
         avioes = appendAvioes(avioes,paraChegar,"chegando");
 
-        System.out.println("Quantidade de pistas disponiveis: ");
+        System.out.print("Quantidade de pistas disponiveis: ");
         totalPistas = inputs.nextInt();
         
         inputs.close();
@@ -35,18 +36,18 @@ public class Aeroporto {
         avioes = sortAviaoArr(avioes);
 
         for (int i = 0; i < totalPistas; i++) {
-            pistas.add(new Pista(i));
+            pistas.add(new Pista());
         }
 
-        for (int i = 0; i < totalPistas; i++) {
-            pistas.get(i).threadStart();
-        }
+        horarioRealStart = System.currentTimeMillis();
+
+        Controlador.Operador();
     }
 
     private static List<Aviao> appendAvioes(List<Aviao> avioes, int quantidade, String status) {
 
         for (int i = 0; i < quantidade; i++) {
-            System.out.println("Horario do aviao " + (i+1) + ": ");
+            System.out.print("Horario do aviao " + (i+1) + ": ");
             long saidaAviao = inputs.nextLong();
 
             avioes.add(new Aviao(saidaAviao, status));
