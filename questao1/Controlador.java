@@ -55,7 +55,7 @@ public class Controlador{
             lock.lock();
             try {
                 while (Aeroporto.pistas.isEmpty()) {
-                    liberou.await();
+                    liberou.await(500L,TimeUnit.MILLISECONDS);
                 }
                 
                 Pista pistaAtual = Aeroporto.pistas.get(0);
