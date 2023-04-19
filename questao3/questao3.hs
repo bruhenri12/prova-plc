@@ -1,54 +1,70 @@
 import Control.Concurrent
 import Control.Concurrent.STM
 
+type Marca = [Char]
+type Nome = [Char]
+type Capacidade = Int
+type Maquina = [(Marca, Capacidade)]
 
-pegaCapacidade marca maquina = head [v | (m, v) <- maquina, m == marca]
+litrosMarcaMaquina :: Marca -> Maquina -> Capacidade
+litrosMarcaMaquina marca maquina = head [v | (m, v) <- maquina, m == marca]
 
-updateCapacidade marca novoCapacidade maquina = ([(m, (if m == marca then novoCapacidade else v)) | (m, v) <- maquina])
+refil :: Marca -> Capacidade -> Maquina -> Maquina
+refil marca novaCapacidade maquina = ([(m, (if m == marca then novaCapacidade else v)) | (m, v) <- maquina])
 
-
-produtor cano marca = queCano where queCano = do 
-                                                a <- takeMVar cano
-                                                if null a then do queCano
+empregado :: MVar Maquina -> Marca -> IO ()
+empregado maquina marca = qualMaquina where qualMaquina = do 
+                                            a <- takeMVar maquina
+                                            if null a then do qualMaquina
+                                            else do
+                                                -- verifica qual refrigerante
+                                                let litrosRestantes = litrosMarcaMaquina marca a
+                                                if(litrosRestantes < 1000) then do
+                                                    -- Se tiver menos litros do que o limite, refil
+                                                    let novaCapacidade = litrosRestantes + 1000
+                                                    threadDelay 1500000 -- Tempo para repor o refrigerante
+                                                    let newA = refil marca novaCapacidade a
+                                                    putStrLn ("Refrigerante " ++ marca  ++ " foi reabastecido com " ++ (show (novaCapacidade - litrosRestantes)) ++ " ml, e agora possui " ++ (show (novaCapacidade)) ++ " ml")
+                                                    putMVar maquina newA
+                                                    qualMaquina
                                                 else do
-                                                    -- ver o refrigerante que vai pegar
-                                                    let capacidade = pegaCapacidade marca a
-                                                    if(capacidade < 1000) then do
-                                                        let newCapacidade = min (capacidade + 1000) 2000
-                                                        threadDelay 1500000
-                                                        let newA = updateCapacidade marca newCapacidade a
-                                                        (print ("Refrigerante " ++ marca  ++ " foi reabastecido com " ++ (show (newCapacidade - capacidade)) ++ " ml, e agora possui " ++ (show (newCapacidade)) ++ " ml"))
-                                                        putMVar cano newA
-                                                        queCano
-                                                    else do
-                                                        putMVar cano a
-                                                        queCano
+                                                    -- Se não, libera a maquina
+                                                    putMVar maquina a
+                                                    qualMaquina
 
-
-consumidor cano marca nome = queCano where queCano = do
-                                                        a <- takeMVar cano
-                                                        if null a then do queCano
+cliente :: MVar Maquina -> Marca -> Nome -> IO ()
+cliente maquina marca nome = qualMaquina where qualMaquina = do
+                                                        a <- takeMVar maquina
+                                                        if null a then do qualMaquina
                                                         else do 
-                                                            -- ver o refrigerante que vai pegar
-                                                            let capacidade = pegaCapacidade marca a
-                                                            if(capacidade < 300) then do
-                                                                putMVar cano a 
-                                                                queCano
+                                                            -- verifica qual refrigerante
+                                                            let litrosRestantes = litrosMarcaMaquina marca a
+                                                            if(litrosRestantes < 300) then do
+                                                                -- Para evitar que o cliente retire mais do que a maquina possui
+                                                                putMVar maquina a 
+                                                                qualMaquina
                                                             else do 
-                                                                threadDelay 1000000
-                                                                let newCapacidade = max (capacidade - 300) 0
-                                                                let newA = updateCapacidade marca newCapacidade a
+                                                                -- Cliente enche o copo e libera a máquina
+                                                                threadDelay 1000000 -- Tempo enchendo o copo
+                                                                let novaCapacidade = max (litrosRestantes - 300) 0
+                                                                let newA = refil marca novaCapacidade a
                                                                 (print ("Cliente " ++ nome ++ " do refrigerante " ++ marca ++ " esta enchendo seu copo!"))
-                                                                putMVar cano newA
-                                                                queCano
+                                                                putMVar maquina newA
+                                                                qualMaquina
+
 main :: IO ()
 main = do
-    maquina <- newMVar [("PCola", 2000),("Guarana Polo Norte", 2000), ("Guarana Quate", 2000)]
-    forkIO $ consumidor maquina "PCola" "joao"
-    forkIO $ consumidor maquina "Guarana Polo Norte" "maria"
-    forkIO $ consumidor maquina "Guarana Quate" "neusa"
-    forkIO $ consumidor maquina "PCola" "jose"
-    forkIO $ produtor maquina "PCola"
-    forkIO $ produtor maquina "Guarana Polo Norte"
-    forkIO $ produtor maquina "Guarana Quate"
+    maquina <- newMVar [("Pepsie-Cola", 2000),("Guarana Polo Norte", 2000), ("Guarana Quate", 2000)]
+    forkIO $ cliente maquina "Pepsie-Cola" "Matheus"
+    forkIO $ cliente maquina "Guarana Polo Norte" "Bruno"
+    forkIO $ cliente maquina "Guarana Polo Norte" "Pain"
+    forkIO $ cliente maquina "Pepsie-Cola" "Maria"
+    forkIO $ cliente maquina "Guarana Quate" "Josefina"
+    forkIO $ cliente maquina "Pepsie-Cola" "Elizabeth"
+    forkIO $ cliente maquina "Guarana Quate" "Joao"
+    forkIO $ cliente maquina "Guarana Quate" "Andre"
+    forkIO $ cliente maquina "Guarana Polo Norte" "Amaro"
+    forkIO $ empregado maquina "Pepsie-Cola"
+    forkIO $ empregado maquina "Guarana Polo Norte"
+    forkIO $ empregado maquina "Guarana Quate"
     readLn
