@@ -4,6 +4,7 @@ _Necessários instalar:_
 
 - Java + javac: 19
 - Haskell: <inserir versão>
+- Lua
 
 ## Questão 1:
 ### _Compilar o código:_
